@@ -1,5 +1,6 @@
 HOME_ROUTE='/'
 ABOUT_ROUTE='/about'
+BLOG_POSTS_ROUTE='/blog'
 CONTACT_US_ROUTE='/contact'
 CONTACT_ENTRIES_LIST_ROUTE='/contact/entries'
 PRICING_ROUTE='/pricing'

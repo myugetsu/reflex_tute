@@ -1,11 +1,10 @@
 import reflex as rx
 from datetime import datetime, timezone
 from sqlmodel import Field
-
 import sqlalchemy
 
-def get_utc_now() -> datetime:
-  return datetime.now(timezone.utc)
+from .. import utils
+
 
 class ContactEntryModel(rx.Model, table=True):
   first_name: str
@@ -13,7 +12,7 @@ class ContactEntryModel(rx.Model, table=True):
   email: str
   message: str
   created_at: datetime = Field(
-    default_factory=get_utc_now,
+    default_factory=utils.timing.get_utc_now,
     sa_type=sqlalchemy.DateTime(timezone=True),
     sa_column_kwargs={
       'server_default': sqlalchemy.func.now()
