@@ -1,109 +1,130 @@
 from datetime import datetime
 from typing import Optional, List
 import reflex as rx
+
+import sqlalchemy
 from sqlmodel import select
 
 from .. import navigation
-from .model import BlogPostModel
+from ..auth.state import SessionState
+from ..models import BlogPostModel, UserInfo
 
 BLOG_POSTS_ROUTE = navigation.routes.BLOG_POSTS_ROUTE
 if BLOG_POSTS_ROUTE.endswith("/"):
     BLOG_POSTS_ROUTE = BLOG_POSTS_ROUTE[:-1]
 
-class BlogPostState(rx.State):
-  posts: List['BlogPostModel'] = []
-  post: Optional['BlogPostModel'] = None
-  post_content: str = ""
-  post_publish_active: bool = False
+class BlogPostState(SessionState):
+    posts: List['BlogPostModel'] = []
+    post: Optional['BlogPostModel'] = None
+    post_content: str = ""
+    post_publish_active: bool = False
 
-  @rx.var
-  def blog_post_id(self):
-    return self.router.page.params.get("blog_id", "")
+    @rx.var
+    def blog_post_id(self):
+        return self.router.page.params.get("blog_id", "")
 
-  @rx.var
-  def blog_post_url(self):
-    if not self.post:
-        return f"{BLOG_POSTS_ROUTE}"
-    return f"{BLOG_POSTS_ROUTE}/{self.post.id}"
+    @rx.var
+    def blog_post_url(self):
+        if not self.post:
+            return f"{BLOG_POSTS_ROUTE}"
+        return f"{BLOG_POSTS_ROUTE}/{self.post.id}"
 
-  @rx.var
-  def blog_post_edit_url(self):
-    if not self.post:
-        return f"{BLOG_POSTS_ROUTE}"
-    return f"{BLOG_POSTS_ROUTE}/{self.post.id}/edit"
+    @rx.var
+    def blog_post_edit_url(self):
+        if not self.post:
+            return f"{BLOG_POSTS_ROUTE}"
+        return f"{BLOG_POSTS_ROUTE}/{self.post.id}/edit"
 
-  def get_post_detail(self):
-    with rx.session() as session:
-      if self.blog_post_id == "":
-        self.post = None
-        return
-      result = session.exec(
-        select(BlogPostModel).where(
-          BlogPostModel.id == self.blog_post_id
-        )
-      ).one_or_none()
-      self.post = result
-      if result is None:
-        self.post_content = ""
-        return
-      self.post_content = self.post.content
-
-  def add_post(self, form_data: dict):
-    with rx.session() as session:
-      post = BlogPostModel(**form_data)
-      session.add(post)
-      session.commit()
-      session.refresh(post) #would have the inserted post e.g post.id
-      self.post = post
-
-
-  def save_post_edits(self, post_id:int, updated_data:dict):
-    with rx.session() as session:
-        post = session.exec(
-            select(BlogPostModel).where(
-                BlogPostModel.id == post_id
-            )
-        ).one_or_none()
-        if post is None:
+    def get_post_detail(self):
+        if self.my_userinfo_id is None:
+            self.post = None
+            self.post_content = ""
+            self.post_publish_active = False
             return
-        for key, value in updated_data.items():
-            setattr(post, key, value)
-        session.add(post)
-        session.commit()
-        session.refresh(post)
-        self.post = post
-
-  def load_posts(self):
-    with rx.session() as session:
-      result = session.exec(
-        select(BlogPostModel).where(
-          (BlogPostModel.publish_active == True) &
-          (BlogPostModel.publish_date < datetime.now())
+        lookups = (
+            (BlogPostModel.userinfo_id == self.my_userinfo_id) &
+            (BlogPostModel.id == self.blog_post_id)
         )
-      ).all()
-      self.posts = result
+        with rx.session() as session:
+            if self.blog_post_id == "":
+                self.post = None
+                return
+            # implement a cache to avoid multiple lookups and improve performance e.g using Redis
+            sql_statement = select(BlogPostModel).options(
+                sqlalchemy.orm.joinedload(BlogPostModel.userinfo).joinedload(UserInfo.user)
+            ).where(lookups)
+            result = session.exec(sql_statement).one_or_none()
+            # if result.userinfo: # db lookup
+            #     print('working')
+            #     result.userinfo.user # db lookup
+            self.post = result
+            if result is None:
+                self.post_content = ""
+                return
+            self.post_content = self.post.content
+            self.post_publish_active = self.post.publish_active
+        # return
 
-  def to_blog_post(self, edit_page=False):
-    if not self.post:
-        return rx.redirect(BLOG_POSTS_ROUTE)
-    if edit_page:
-          return rx.redirect(f"{self.blog_post_edit_url}")
-    return rx.redirect(f"{self.blog_post_url}")
 
-  # def get_post(self, post_id):
-  #   with rx.session() as session:
-  #     result = session.exec(
-  #       select(BlogPostModel)
-  #     )
-  #     self.posts = result
+    def load_posts(self, *args, **kwargs):
+        # if published_only:
+        #     lookup_args = (
+        #         (BlogPostModel.publish_active == True) &
+        #         (BlogPostModel.publish_date < datetime.now())
+        #     )
+        with rx.session() as session:
+            result = session.exec(
+                select(BlogPostModel).options(
+                    sqlalchemy.orm.joinedload(BlogPostModel.userinfo)
+                ).where(BlogPostModel.userinfo_id == self.my_userinfo_id)
+            ).all()
+            self.posts = result
+        # return
+
+    def add_post(self, form_data:dict):
+        with rx.session() as session:
+            post = BlogPostModel(**form_data)
+            # print("adding", post)
+            session.add(post)
+            session.commit()
+            session.refresh(post) # post.id
+            # print("added", post)
+            self.post = post
+
+    def save_post_edits(self, post_id:int, updated_data:dict):
+        with rx.session() as session:
+            post = session.exec(
+                select(BlogPostModel).where(
+                    BlogPostModel.id == post_id
+                )
+            ).one_or_none()
+            if post is None:
+                return
+            for key, value in updated_data.items():
+                setattr(post, key, value)
+            session.add(post)
+            session.commit()
+            session.refresh(post)
+            self.post = post
+
+    def to_blog_post(self, edit_page=False):
+        if not self.post:
+            return rx.redirect(BLOG_POSTS_ROUTE)
+        if edit_page:
+             return rx.redirect(f"{self.blog_post_edit_url}")
+        return rx.redirect(f"{self.blog_post_url}")
+
 
 class BlogAddPostFormState(BlogPostState):
-  form_data: dict = {}
+    form_data: dict = {}
 
-  def handle_submit(self, form_data):
-    self.form_data = form_data
-    self.add_post(form_data)
-    return self.to_blog_post(edit_page=True)
+    def handle_submit(self, form_data):
+        data = form_data.copy()
+        if self.my_userinfo_id is not None:
+            data['userinfo_id'] = self.my_userinfo_id
+        self.form_data = data
+        self.add_post(data)
+        return self.to_blog_post(edit_page=True)
 
 
 class BlogEditFormState(BlogPostState):
@@ -149,4 +170,3 @@ class BlogEditFormState(BlogPostState):
         updated_data['publish_date'] = final_publish_date
         self.save_post_edits(post_id, updated_data)
         return self.to_blog_post()
-
