@@ -25,10 +25,14 @@ On Windows use `venv\Scripts\activate`
 Edit rxconfig.py with your configuration details.
 
 5. **Usage**
-``` reflex db init ``` # initalize sqlite db
-``` reflex db makemigration ``` # create database schemas
-``` reflex db migrate ``` # create db
-``` reflex run ``` # start application
+  ```reflex db init``` # initalize sqlite db
+
+
+  ``` reflex db makemigration ``` # create database schemas
+
+  ``` reflex db migrate ``` # create db
+
+  ``` reflex run ``` # start application
 
 **More Info**
 checkout ``https://reflex.dev/`` for more information on reflexs
