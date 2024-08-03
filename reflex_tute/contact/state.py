@@ -2,10 +2,11 @@ from typing import List
 import asyncio
 import reflex as rx
 from sqlmodel import select
+from ..auth.state import SessionState
 from .model import ContactEntryModel
 
 
-class ContactState(rx.State):
+class ContactState(SessionState):
   form_data: dict = {}
   did_submit: bool = False
   entreis: List['ContactEntryModel'] = []
@@ -23,6 +24,10 @@ class ContactState(rx.State):
       if v == "" or v is None:
         continue
       data[k] = v
+    if self.my_user_id is not None:
+      data['user_id'] = self.my_user_id
+    # if self.my_userinfo_id is not None:
+    #   data['userinfo_id'] = self.my_userinfo_id
     with rx.session() as session:
       db_entry = ContactEntryModel(**data)
       session.add(db_entry)

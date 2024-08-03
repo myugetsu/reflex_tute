@@ -1,13 +1,9 @@
-
 import reflex as rx
 import reflex_local_auth
 
 import sqlmodel
 
 from .models import UserInfo
-
-
-
 
 class SessionState(reflex_local_auth.LocalAuthState):
     @rx.cached_var
