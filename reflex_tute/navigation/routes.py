@@ -1,7 +1,9 @@
-HOME_ROUTE='/'
-ABOUT_ROUTE='/about'
-BLOG_POSTS_ROUTE='/blog'
+HOME_ROUTE="/"
+ABOUT_ROUTE="/about"
+ARTICLE_LIST_ROUTE="/articles"
+BLOG_POSTS_ROUTE="/blog"
 BLOG_POST_ADD_ROUTE="/blog/add"
-CONTACT_US_ROUTE='/contact'
-CONTACT_ENTRIES_LIST_ROUTE='/contact/entries'
-PRICING_ROUTE='/pricing'
+CONTACT_US_ROUTE="/contact"
+CONTACT_ENTRIES_LIST_ROUTE="/contact/entries"
+LOGOUT_ROUTE="/logout"
+PRICING_ROUTE="/pricing"
