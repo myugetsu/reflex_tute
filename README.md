@@ -2,25 +2,6 @@
 
 This is a Python-based blog site built using the Reflex framework. It showcases various functionalities including user authentication, blog management, article details, and contact forms.
 
-## Project Structure
-
-The project directory is organized as follows:
-├── reflex_tute
-│ ├── init.py
-│ ├── articles
-│ ├── auth
-│ ├── blog
-│ ├── contact
-│ ├── models.py
-│ ├── navigation
-│ ├── pages
-│ ├── reflex_tute.py
-│ ├── ui
-│ └── utils
-├── requirements.txt
-└── rxconfig.py
-
-
 ## Installation
 
 To get started with this project, follow these steps:
