@@ -12,27 +12,30 @@ To get started with this project, follow these steps:
    ``` cd <repository-directory>```
 
 2. **Create a Virtual Environment**
-``` python -m venv venv ```
-``` source venv/bin/activate ```
 
-On Windows use `venv\Scripts\activate`
+    ``` python -m venv venv ```
+    ``` source venv/bin/activate ```
+
+    On Windows use `venv\Scripts\activate`
 
 3. **Install Dependencies**
-``` pip install -r requirements.txt ```
+
+    ``` pip install -r requirements.txt ```
 
 
-4. **Configure Reflex**
-Edit rxconfig.py with your configuration details.
+1. **Configure Reflex**
+    Edit rxconfig.py with your configuration details.
 
-5. **Usage**
-  ```reflex db init``` # initalize sqlite db
+1. **Usage**
+
+    ```reflex db init``` # initalize sqlite db
 
 
-  ``` reflex db makemigration ``` # create database schemas
+    ``` reflex db makemigration ``` # create database schemas
 
-  ``` reflex db migrate ``` # create db
+    ``` reflex db migrate ``` # create db
 
-  ``` reflex run ``` # start application
+    ``` reflex run ``` # start application
 
 **More Info**
 checkout ``https://reflex.dev/`` for more information on reflexs
