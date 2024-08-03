@@ -9,6 +9,7 @@ To get started with this project, follow these steps:
 1. **Clone the Repository**
 
    ``` git clone <repository-url> ```
+
    ``` cd <repository-directory>```
 
 2. **Create a Virtual Environment**
